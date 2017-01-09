@@ -42,7 +42,63 @@ class IndexPage(webapp2.RequestHandler):
 # [START live_count]
 class LiveCount(webapp2.RequestHandler):
     def get(self):
-        template_values = {'records': [record for record in NukotanLive().query()]}
+        setlists_count = {}
+        tours = ['']
+        places = ['']
+        conditions = {}
+        
+        if len(self.request.GET) != 0:
+            # With filtering
+            conditions = self.request.GET
+            isfirst = True
+            if self.request.GET.has_key('tour') and self.request.GET['tour'] != '':
+                query = NukotanLive.query(NukotanLive.tour == self.request.GET['tour'].strip())
+                isfirst = False
+            if self.request.GET.has_key('place') and self.request.GET['place'] != '':
+                if isfirst:
+                    query = NukotanLive.query(NukotanLive.place == self.request.GET['place'].strip())
+                    isfirst = False
+                else:
+                    query = query.query(NukotanLive.place == self.request.GET['place'].strip())
+            if self.request.GET.has_key('date_from') and self.request.GET['date_from'] != '':
+                if isfirst:
+                    query = NukotanLive.query(NukotanLive.date >= dt.strptime(self.request.GET['date_from'].strip(), "%Y-%m-%d"))
+                    isfirst = False
+                else:
+                    query = query.filter(NukotanLive.date >= dt.strptime(self.request.GET['date_from'].strip(), "%Y-%m-%d"))
+            if self.request.GET.has_key('date_to') and self.request.GET['date_to'] != '':
+                if isfirst:
+                    query = NukotanLive.query(NukotanLive.date <= dt.strptime(self.request.GET['date_to'].strip(), "%Y-%m-%d"))                    
+                else:
+                    query = query.filter(NukotanLive.date <= dt.strptime(self.request.GET['date_to'].strip(), "%Y-%m-%d"))
+
+            if isfirst:
+                # Get All Songs from NukotanLiveAll entity
+                for record in NukotanLiveAll.query():
+                    # self.response.out.write(record.song)
+                    setlists_count[record.song] = record.count
+            else:
+                for record in query:
+                    song = record.song.replace(u'（新曲）', '').strip()
+                    if setlists_count.has_key(song):
+                        setlists_count[song] += 1
+                    else:
+                        setlists_count[song] = 1
+        else:
+            # Get All Songs from NukotanLiveAll entity
+            for record in NukotanLiveAll.query():
+                # self.response.out.write(record.song)
+                setlists_count[record.song] = record.count
+            
+        # Get tour titles, places ordering by date desc
+        for record in NukotanLive.query():
+            tours.append(record.tour)
+            places.append(record.place)
+
+        places_uniq = list(set(places))
+        tours_uniq = list(set(tours))
+
+        template_values = {'setlists_count': setlists_count, 'places_uniq': places_uniq, 'tours_uniq': tours_uniq, 'conditions': conditions}
         template = JINJA_ENVIRONMENT.get_template('live_count.html')
         self.response.write(template.render(template_values))
 # [END live_count]
@@ -90,7 +146,7 @@ class PutDatastore(webapp2.RequestHandler):
                 entity.album = record['album']
                 entity.release = dt.strptime(record['release'], '%Y-%m-%d')
                 entities.append(entity)
-            # ndb.put_multi(entities)
+            ndb.put_multi(entities)
             self.redirect('/live_count/put_datastore')
         else:
             template = JINJA_ENVIRONMENT.get_template('put_datastore.html')
