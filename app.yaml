@@ -1,0 +1,35 @@
+runtime: python27
+api_version: 1
+threadsafe: true
+
+# [START handlers]
+handlers: 
+- url: /favicon\.ico
+  static_files: favicon.ico
+  upload: favicon\.ico
+
+- url: /bootstrap
+  static_dir: bootstrap
+
+- url: /tmp
+  static_dir: tmp
+  application_readable: true
+
+- url: /nukotan
+  static_dir: nukotan
+
+- url: /bower_components
+  static_dir: bower_components
+
+- url: /.*
+  script: index.app
+# [END handlers]
+
+# [START libraries]
+libraries:
+- name: webapp2
+  version: latest
+- name: jinja2
+  version: latest
+# [END libraries]
+

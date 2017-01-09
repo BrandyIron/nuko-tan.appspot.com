@@ -1,0 +1,21 @@
+indexes:
+- kind: NukotanLive
+  ancestor: no
+  properties:
+  - name: date
+  - name: tour
+    direction: desc
+
+- kind: NukotanLive
+  ancestor: no
+  properties:
+  - name: date
+  - name: place
+    direction: desc
+
+- kind: NukotanLiveAll
+  ancestor: no
+  properties:
+  - name: song
+  - name: count
+    direction: desc

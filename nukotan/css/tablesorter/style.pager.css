@@ -1,0 +1,21 @@
+#jquery-tablesorter-table {
+    width: 500px !important;
+    margin: 0 !important;
+}
+#jquery-tablesorter-table th {
+    color: #333333 !important;
+    padding: 0.5em 1em !important;
+}
+#jquery-tablesorter-table td {
+    color: #333333 !important;
+    padding: 0.5em 1em 0.5em 2em !important;
+}
+#jquery-tablesorter-table th, #jquery-tablesorter-table td {
+    border: 1px solid #d1d1d1;
+}
+#jquery-pager form {
+    margin: 0 !important;
+}
+#jquery-pager input {
+    font-size: 13px;
+}

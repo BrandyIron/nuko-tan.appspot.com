@@ -1,0 +1,19 @@
+{
+  "name": "nukotan_front",
+  "description": "",
+  "main": "",
+  "license": "MIT",
+  "homepage": "",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "bootstrap-calendar": "^0.2.5",
+    "eonasdan-bootstrap-datetimepicker": "^4.17.44"
+  }
+}
