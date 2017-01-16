@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+{% autoescape true %}
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="../../favicon.ico">
+
+    <title>ぬこたん楽曲ランキング生成</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/bower_components/eonasdan-bootstrap-datetimepicker/build/css/bootstrap-datetimepicker.min.css" />
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="/bootstrap/js/bootstrap.min.js"></script>
+    
+    <!-- js-cookie -->
+    <script type="text/javascript" src="/nukotan/js/js-cookie/src/js.cookie.js"></script>
+	
+	<script>
+		$(document).ready(function(){
+			initialize();
+			set_candidates();
+			});
+	</script>
+	
+  </head>
+
+  <body>
+  <noscript>
+  	<p class="bg-primary">このページではJavaScriptを使用しています。<br>JavaScriptをOnにしてください(*´Д`)ﾊｧﾊｧ</p>
+  </noscript>
+    <nav class="navbar navbar-static-top navbar-dark bg-inverse">
+      <a class="navbar-brand" href="/">nuko-tan.appspot.com</a>
+      <ul class="nav navbar-nav">
+        <li class="nav-item active">
+          <a class="nav-link" href="/">ホーム</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/live_count">ぬこたん雷舞集計</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/song_ranking">ぬこたん楽曲ランキング生成</a>
+        </li>
+      </ul>
+    </nav>
+
+	<div class="container">
+		<div class="page-header">
+			<h1>好きな方の曲を選んでください</h1>
+			<ul>
+				<li>「私には選べないよぬこたん(*´Д`)ﾊｧﾊｧ」を選ぶことで比較回数を減らすことができます</li>
+			</ul>
+			<h3>進行度: (*´Д`)</h3>
+		</div>
+		<div id="row">
+			<button type="submit" class="btn btn-primary col-md-4" id="left" onclick=""></button>
+			<button type="submit" class="btn btn-primary col-md-4" id="center" onclick="push_record('icannot');">私には選べないよぬこたん(*´Д`)ﾊｧﾊｧ</button>
+			<button type="submit" class="btn btn-primary col-md-4" id="right" onclick=""></button>
+		</div>
+		
+	</div>
+  <script>
+	var origin_songs = [
+  		{% for song in songs %}
+  		"{{ song }}", 
+  		{% endfor %}
+  	];
+	origin_songs = shuffle(origin_songs);
+	var songs = [];
+	var icannotsongs = [];
+  	var ktop = {{ ktop }};
+	var algorithm = "{{ algorithm }}";
+	var records = []; // record prefer songs
+  	var record_cursor = 0;
+  	var left;
+  	var right;
+  	var pivotIndex;
+
+  	function setCookie() {
+  		Cookies.set('nukotan_ranking', {
+  			songs: songs,
+  			left: 0, 
+  			right: Cookie.get('nukotan_ranking').['songs'].length - 1,
+  			pivotIndex: Math.floor((left + right) / 2)
+  		});
+  	}
+  	
+  	function initialize() {
+  		candidates = quicksortFirstK(left, right);
+  		console.log(candidates);
+  	}
+  	
+  	function reset_cursor() {
+  		left = 0;
+  		right = songs.length - 1;
+  		pivotIndex = Math.floor((left + right) / 2);
+  		songs = origin_songs;
+  	}
+  	
+  	function shuffle(array) {
+  		var n = array.length, t, i;
+  		
+  		while (n) {
+  			i = Math.floor(Math.random() * n--);
+  			t = array[n];
+  			array[n] = array[i];
+  			array[i] = t;
+  		}
+  		return array;
+  	}
+  	
+  	function partition(left, right, pivotIndex) {
+  		pivotValue = songs[pivotIndex];
+  		songs[pivotIndex] = [songs[pivotIndex], songs[pivotIndex] = songs[right]][0];
+  		storeIndex = left;
+  		for (var i = left; i < right - 1; i++) {
+  			if (record_cursor == records.length) return [songs[i], pivotValue];
+  			if (records[record_cursor] == pivotValue) {
+  				songs[storeIndex] = [songs[storeIndex], songs[storeIndex] = songs[i]][0];
+  				storeIndex++;
+  			}
+  		}
+  		songs[storeIndex] = [songs[storeIndex], songs[storeIndex] = songs[right]][0];
+  		record_cursor++;
+  		return storeIndex;
+  	}
+  	
+  	function quicksortFirstK(left, right) {
+  		if (right > left) {
+  			res = partition(left, right, pivotIndex);
+  			if (Array.isArray(res)) return res;
+  			pivotNewIndex = res;
+  			quicksortFirstK(left, pivotNewIndex - 1);
+  			if (pivotNewIndex < ktop) {
+  				quicksortFirstK(songs, pivotNewIndex + 1, right);
+  			}
+  		}
+  		return true;
+  	}
+  	
+  	function push_record(selected) {
+  		if (selected == "icannot") {
+  			icannotsongs.push(candidates);
+  		} else {
+  			records.push(selected);
+  			console.log(records);
+  			reset_cursor();
+			candidates = quicksortFirstK(left, right);
+			set_candidates();
+  		}
+  	}
+  	
+  	function set_candidates() {
+		if(Array.isArray(candidates)) {
+			candidates = shuffle(candidates);
+			$(':submit#left').html(candidates[0]);
+			$(':submit#left').attr({onclick: "push_record('"+candidates[0]+"');"});
+			$(':submit#right').html(candidates[1]);
+			$(':submit#right').attr({onclick: "push_record('"+candidates[1]+"');"});			
+		} else {
+			// finish
+		}
+  	}
+  	
+  </script>
+  </body>
+
+</html>
+{% endautoescape %}
